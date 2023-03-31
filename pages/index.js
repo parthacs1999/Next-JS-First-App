@@ -1,5 +1,4 @@
 import MeetupList from "../components/meetups/MeetupList";
-
 const DUMMY_MEETUPS = [
     {
         id: 'm1',
@@ -16,9 +15,27 @@ const DUMMY_MEETUPS = [
         description: 'meetup details will be forwarded to you'
     }
 ]
-const HomePage = () => {
+const HomePage = (props) => {
     return (
-        <MeetupList meetups={DUMMY_MEETUPS} />
+        <MeetupList meetups={props.meetups} />
     )
 }
+export async function getStaticProps(){
+    //Fetch data from database
+    return {
+        props:{
+            meetups:DUMMY_MEETUPS
+        },
+        revalidate:10
+    }
+}
+// export async function getServerSideProps(context){
+//     const req=context.req;
+//     const res=context.res;
+//     return{
+//         props:{
+//             meetups:DUMMY_MEETUPS
+//         }
+//     }
+// }
 export default HomePage;
