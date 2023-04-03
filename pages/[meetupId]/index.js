@@ -1,39 +1,46 @@
+import { Fragment } from "react";
 import MeetUpDetail from "../../components/meetups/MeetupDetail";
-const MeetUpDetails = () => {
+import Head from 'next/head';
+import { MongoClient, ObjectId } from "mongodb";
+const MeetUpDetails = (props) => {
     return (
-        <MeetUpDetail image="https://images.unsplash.com/photo-1576085898323-218337e3e43c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8bWVldHVwfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60" title="First Meetup" address="Sector 5,kolkata,west Bengal" description="The Meetup description"/>
+        <Fragment>
+            <Head>
+                <title>{props.meetupData.title}</title>
+                <meta name="description" content={props.meetupData.description} />
+            </Head>
+            <MeetUpDetail image={props.meetupData.image} title={props.meetupData.title} address={props.meetupData.address} description={props.meetupData.description} />
+        </Fragment>
     )
 }
 
-export function getStaticPaths(){
+export async function getStaticPaths() {
+    const client = await MongoClient.connect('mongodb+srv://riz_codes:Mongo_riz_123@cluster0.5geqr1z.mongodb.net/meetups?retryWrites=true&w=majority');
+    const db = client.db();
+    const meetupsCollections = db.collection('meetups');
+    const meetups = await meetupsCollections.find({}, { _id: 1 }).toArray();
+    client.close();
     return {
-        fallback:false,
-        paths:[
-            {
-                params:{
-                    meetupId:'m1'
-                }
-            },
-            {
-                params:{
-                    meetupId:'m2'
-                }
-            }
-        ]
+        fallback: false,
+        paths: meetups.map(meetup => ({ params: { meetupId: meetup._id.toString() } })),
     }
 }
 
-export async function getStaticProps(context){
-    const meetupId=context.params.meetupId;
-    console.log(meetupId);
-    return{
-        props:{
-            meetupData:{
-                id:meetupId,
-                image:"https://images.unsplash.com/photo-1576085898323-218337e3e43c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8bWVldHVwfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60",
-                title:"First Meetup",
-                address:"Sector 5,kolkata,west Bengal",
-                description:"The Meetup description"
+export async function getStaticProps(context) {
+    const meetupId = context.params.meetupId;
+    const client = await MongoClient.connect('mongodb+srv://riz_codes:Mongo_riz_123@cluster0.5geqr1z.mongodb.net/meetups?retryWrites=true&w=majority');
+    const db = client.db();
+    const meetupsCollections = db.collection('meetups');
+    const selectedMeetup = await meetupsCollections.findOne({ _id: new ObjectId(meetupId) });
+    client.close();
+    return {
+        props: {
+            meetupData: {
+                id: selectedMeetup._id.toString(),
+                title: selectedMeetup.title,
+                address: selectedMeetup.address,
+                image: selectedMeetup.image,
+                description: selectedMeetup.description
             }
         }
     }
